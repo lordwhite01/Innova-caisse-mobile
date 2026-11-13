@@ -54,216 +54,161 @@ class _SchoolFormPageState extends ConsumerState<SchoolFormPage> {
     if (mounted) Navigator.pop(context);
   }
 
-  Color get _typeColor {
-    switch (_type) {
-      case ClientType.nouveau:
-        return AppColors.success;
-      case ClientType.ancien:
-        return const Color(0xFF2563EB);
-    }
-  }
-
-  Color get _typeBgColor {
-    switch (_type) {
-      case ClientType.nouveau:
-        return const Color(0xFFE6F4EE);
-      case ClientType.ancien:
-        return const Color(0xFFE3EEFF);
-    }
-  }
-
-  static const _subtleBorder = OutlineInputBorder(
-    borderRadius: BorderRadius.all(Radius.circular(12)),
-    borderSide: BorderSide(color: Color(0xFFDDE3F0), width: 1.5),
-  );
-
-  static const _focusedBorder = OutlineInputBorder(
-    borderRadius: BorderRadius.all(Radius.circular(12)),
-    borderSide: BorderSide(color: AppColors.navy, width: 1.5),
-  );
-
   @override
   Widget build(BuildContext context) {
     final isEdit = widget.school != null;
     return Scaffold(
       appBar: AppBar(
-        title: Text(isEdit ? 'Modifier l'établissement' : 'Nouvel établissement'),
+        title: Text(isEdit ? 'Modifier l’établissement' : 'Nouvel établissement'),
       ),
       body: Form(
         key: _formKey,
         child: ListView(
-          padding: EdgeInsets.zero,
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
           children: [
-            // ── Visual header ──────────────────────────────────────────
-            Container(
-              width: double.infinity,
-              margin: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-              padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
-              decoration: BoxDecoration(
-                color: AppColors.navy,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.12),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.school,
-                        size: 40, color: Colors.white),
+            _FormSection(
+              title: 'Informations',
+              children: [
+                TextFormField(
+                  controller: _name,
+                  validator: _required,
+                  decoration: const InputDecoration(
+                    labelText: 'Nom de l’école',
+                    prefixIcon: Icon(Icons.school_outlined),
                   ),
-                  const SizedBox(height: 12),
-                  Text(
-                    isEdit ? 'Modifier l'établissement' : 'Nouvel établissement',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                    ),
+                ),
+                const SizedBox(height: 14),
+                TextFormField(
+                  controller: _city,
+                  validator: _required,
+                  decoration: const InputDecoration(
+                    labelText: 'Ville',
+                    prefixIcon: Icon(Icons.location_city_outlined),
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 14),
+                TextFormField(
+                  controller: _contact,
+                  validator: _required,
+                  decoration: const InputDecoration(
+                    labelText: 'Responsable et contact',
+                    prefixIcon: Icon(Icons.person_outline),
+                  ),
+                ),
+              ],
             ),
-
-            // ── Form fields ────────────────────────────────────────────
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  TextFormField(
-                    controller: _name,
-                    validator: _required,
-                    decoration: InputDecoration(
-                      labelText: 'Nom de l'école',
-                      prefixIcon: const Icon(Icons.school_outlined),
-                      enabledBorder: _subtleBorder,
-                      focusedBorder: _focusedBorder,
-                      errorBorder: const OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(12)),
-                        borderSide:
-                            BorderSide(color: AppColors.danger, width: 1.5),
-                      ),
-                      focusedErrorBorder: const OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(12)),
-                        borderSide:
-                            BorderSide(color: AppColors.danger, width: 1.5),
+            const SizedBox(height: 24),
+            _FormSection(
+              title: 'Type de client',
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: _TypeOption(
+                        type: ClientType.nouveau,
+                        selected: _type == ClientType.nouveau,
+                        onTap: () => setState(() => _type = ClientType.nouveau),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 14),
-                  TextFormField(
-                    controller: _city,
-                    validator: _required,
-                    decoration: InputDecoration(
-                      labelText: 'Ville',
-                      prefixIcon: const Icon(Icons.location_city_outlined),
-                      enabledBorder: _subtleBorder,
-                      focusedBorder: _focusedBorder,
-                      errorBorder: const OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(12)),
-                        borderSide:
-                            BorderSide(color: AppColors.danger, width: 1.5),
-                      ),
-                      focusedErrorBorder: const OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(12)),
-                        borderSide:
-                            BorderSide(color: AppColors.danger, width: 1.5),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _TypeOption(
+                        type: ClientType.ancien,
+                        selected: _type == ClientType.ancien,
+                        onTap: () => setState(() => _type = ClientType.ancien),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: 14),
-                  TextFormField(
-                    controller: _contact,
-                    validator: _required,
-                    decoration: InputDecoration(
-                      labelText: 'Responsable et contact',
-                      prefixIcon: const Icon(Icons.person_outline),
-                      enabledBorder: _subtleBorder,
-                      focusedBorder: _focusedBorder,
-                      errorBorder: const OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(12)),
-                        borderSide:
-                            BorderSide(color: AppColors.danger, width: 1.5),
-                      ),
-                      focusedErrorBorder: const OutlineInputBorder(
-                        borderRadius: BorderRadius.all(Radius.circular(12)),
-                        borderSide:
-                            BorderSide(color: AppColors.danger, width: 1.5),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-
-                  // ── Type de client ───────────────────────────────────
-                  const Text('Type de client',
-                      style: TextStyle(fontWeight: FontWeight.w700)),
-                  const SizedBox(height: 10),
-                  Card(
-                    elevation: 0,
-                    color: Colors.white,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16)),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          SegmentedButton<ClientType>(
-                            segments: [
-                              for (final t in ClientType.values)
-                                ButtonSegment(
-                                    value: t,
-                                    label: Text('${t.label} (${t.code})')),
-                            ],
-                            selected: {_type},
-                            onSelectionChanged: (s) =>
-                                setState(() => _type = s.first),
-                          ),
-                          const SizedBox(height: 12),
-                          // Tariff description badge
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: _typeBgColor,
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                'Abonnement : ${_type.subscriptionPrice} FCFA',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: _typeColor,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 32),
-
-                  // ── Save button ──────────────────────────────────────
-                  FilledButton(
-                    onPressed: _save,
-                    style: FilledButton.styleFrom(
-                        minimumSize: const Size.fromHeight(52)),
-                    child: Text(
-                      isEdit ? 'Modifier' : 'Créer l'établissement',
-                    ),
-                  ),
-                  const SizedBox(height: 24),
-                ],
-              ),
+                  ],
+                ),
+              ],
             ),
+            const SizedBox(height: 32),
+            FilledButton(onPressed: _save, child: const Text('Enregistrer')),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Bloc de formulaire avec un titre en phrase normale.
+class _FormSection extends StatelessWidget {
+  const _FormSection({required this.title, required this.children});
+
+  final String title;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: 12),
+        ...children,
+      ],
+    );
+  }
+}
+
+/// Carte de choix du type client, avec le montant de l'abonnement.
+class _TypeOption extends StatelessWidget {
+  const _TypeOption({
+    required this.type,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final ClientType type;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final fg = selected ? Colors.white : AppColors.ink;
+    final sub = selected ? Colors.white70 : AppColors.muted;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: selected ? AppColors.navy : Colors.white,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: selected ? AppColors.navy : AppColors.border,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(type.label,
+                        style: TextStyle(
+                            color: fg,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14)),
+                  ),
+                  if (selected)
+                    const Icon(Icons.check_circle, color: AppColors.orange, size: 20),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text('${type.subscriptionPrice} FCFA',
+                  style: TextStyle(
+                      color: fg,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w800)),
+              const SizedBox(height: 2),
+              Text('Abonnement · ${type.code}',
+                  style: TextStyle(color: sub, fontSize: 12)),
+            ],
+          ),
         ),
       ),
     );

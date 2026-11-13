@@ -14,10 +14,18 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
+        onUpgrade: (m, from, to) async {
+          if (from < 2) {
+            await m.addColumn(subscriptions, subscriptions.amountPaid);
+            await m.addColumn(subscriptions, subscriptions.movementId);
+            await m.addColumn(photoSessions, photoSessions.amountPaid);
+            await m.addColumn(photoSessions, photoSessions.movementId);
+          }
+        },
         beforeOpen: (details) async {
           // Intégrité référentielle activée (SQLite la désactive par défaut).
           await customStatement('PRAGMA foreign_keys = ON');

@@ -48,10 +48,11 @@ class _HomePageState extends ConsumerState<HomePage> {
           ),
           Expanded(
             child: GridView.count(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+              padding: const EdgeInsets.fromLTRB(28, 28, 28, 24),
               crossAxisCount: 2,
-              mainAxisSpacing: 16,
-              crossAxisSpacing: 16,
+              mainAxisSpacing: 14,
+              crossAxisSpacing: 14,
+              childAspectRatio: 1.3,
               children: [
                 for (final item in items)
                   HomeCard(
@@ -63,17 +64,6 @@ class _HomePageState extends ConsumerState<HomePage> {
                     ),
                   ),
               ],
-            ),
-          ),
-          // Footer (item 6)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 16, top: 4),
-            child: Text(
-              'Innova School · Caisse v1.0',
-              style: TextStyle(
-                color: AppColors.navy.withOpacity(0.4),
-                fontSize: 11,
-              ),
             ),
           ),
         ],
@@ -88,32 +78,6 @@ class _NavItem {
   final IconData icon;
   final Widget page;
 }
-
-// ─── Helpers for date & greeting ──────────────────────────────────────────────
-
-String _formatDate(DateTime d) {
-  const jours = [
-    'lundi', 'mardi', 'mercredi', 'jeudi',
-    'vendredi', 'samedi', 'dimanche'
-  ];
-  const mois = [
-    'janvier', 'février', 'mars', 'avril', 'mai', 'juin',
-    'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'
-  ];
-  // DateTime.weekday: 1=lundi … 7=dimanche
-  final jour = jours[d.weekday - 1];
-  final m = mois[d.month - 1];
-  return '$jour ${d.day} $m ${d.year}';
-}
-
-String _greeting() {
-  final h = DateTime.now().hour;
-  if (h < 12) return 'Bonjour ☀️';
-  if (h < 18) return 'Bon après-midi 🌤';
-  return 'Bonsoir 🌙';
-}
-
-// ─── Header ───────────────────────────────────────────────────────────────────
 
 class _Header extends StatelessWidget {
   const _Header({
@@ -133,26 +97,11 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final now = DateTime.now();
-
     return Container(
       width: double.infinity,
       decoration: const BoxDecoration(
-        // Item 1 — gradient
-        gradient: LinearGradient(
-          colors: [AppColors.navy, Color(0xFF1A237E)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: AppColors.navy,
         borderRadius: BorderRadius.only(bottomRight: Radius.circular(90)),
-        // Item 5 — box shadow
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x40000000),
-            blurRadius: 18,
-            offset: Offset(0, 6),
-          ),
-        ],
       ),
       child: SafeArea(
         bottom: false,
@@ -161,9 +110,7 @@ class _Header extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Top row: logo + title / date (item 2)
               Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
                     width: 64,
@@ -190,28 +137,9 @@ class _Header extends StatelessWidget {
                       ),
                     ),
                   ),
-                  // Item 2 — date du jour
-                  Text(
-                    _formatDate(now),
-                    style: const TextStyle(
-                      color: Colors.white60,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
                 ],
               ),
-              const SizedBox(height: 20),
-              // Item 3 — greeting
-              Text(
-                _greeting(),
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 28),
               const Text('Solde de caisse',
                   style: TextStyle(color: Colors.white70, fontSize: 14)),
               const SizedBox(height: 6),
@@ -269,8 +197,6 @@ class _Header extends StatelessWidget {
   }
 }
 
-// ─── StatTile ─────────────────────────────────────────────────────────────────
-
 class _StatTile extends StatelessWidget {
   const _StatTile({
     required this.label,
@@ -286,33 +212,44 @@ class _StatTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Item 4 — left border + slightly lighter background
     return Container(
-      padding: const EdgeInsets.fromLTRB(12, 10, 12, 10),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(16),
-        border: Border(
-          left: BorderSide(color: color, width: 3),
-        ),
+        color: Colors.white.withOpacity(0.07),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white.withOpacity(0.12)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, size: 16, color: color),
-              const SizedBox(width: 6),
-              Text(label,
-                  style: const TextStyle(color: Colors.white70, fontSize: 12)),
+              Container(
+                width: 26,
+                height: 26,
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.18),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(icon, size: 15, color: color),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(label,
+                    style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600)),
+              ),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 10),
           Text(value,
               style: const TextStyle(
                   color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 14)),
+                  fontWeight: FontWeight.w800,
+                  fontSize: 15,
+                  fontFeatures: [FontFeature.tabularFigures()])),
         ],
       ),
     );

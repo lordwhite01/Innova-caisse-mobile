@@ -41,6 +41,8 @@ class Subscription {
     required this.kind,
     required this.amount,
     required this.date,
+    this.amountPaid = 0,
+    this.movementId,
   });
 
   final int id;
@@ -48,6 +50,10 @@ class Subscription {
   final String kind; // 'abonnement' | 'réabonnement'
   final int amount;
   final DateTime date;
+  final int amountPaid;
+  final int? movementId;
+
+  int get remaining => amount - amountPaid;
 }
 
 class PhotoSession {
@@ -57,6 +63,8 @@ class PhotoSession {
     required this.date,
     required this.studentsRegistered,
     required this.unitPrice,
+    this.amountPaid = 0,
+    this.movementId,
   });
 
   final int id;
@@ -64,9 +72,13 @@ class PhotoSession {
   final DateTime date;
   final int studentsRegistered;
   final int unitPrice;
+  final int amountPaid;
+  final int? movementId;
 
   /// Montant total dû pour la prise de vue.
   int get amountDue => studentsRegistered * unitPrice;
+
+  int get remaining => amountDue - amountPaid;
 }
 
 class CashMovement {

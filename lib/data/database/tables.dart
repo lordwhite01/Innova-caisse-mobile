@@ -16,6 +16,9 @@ class Subscriptions extends Table {
       integer().references(Schools, #id, onDelete: KeyAction.cascade)();
   TextColumn get kind => text()();
   IntColumn get amount => integer()();
+  IntColumn get amountPaid => integer().withDefault(const Constant(0))();
+  /// Encaissement lié, créé automatiquement quand un montant est payé.
+  IntColumn get movementId => integer().nullable()();
   DateTimeColumn get date => dateTime()();
 }
 
@@ -26,6 +29,9 @@ class PhotoSessions extends Table {
   DateTimeColumn get date => dateTime()();
   IntColumn get studentsRegistered => integer()();
   IntColumn get unitPrice => integer()();
+  IntColumn get amountPaid => integer().withDefault(const Constant(0))();
+  /// Encaissement lié, créé automatiquement quand un montant est payé.
+  IntColumn get movementId => integer().nullable()();
 }
 
 class CashMovements extends Table {

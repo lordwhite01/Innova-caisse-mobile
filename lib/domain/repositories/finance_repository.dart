@@ -7,9 +7,15 @@ abstract class FinanceRepository {
   Future<void> saveSchool(School school);
   Future<void> deleteSchool(int id);
 
-  // Abonnements : le montant est calculé automatiquement selon le type client.
+  // Abonnements : le montant dû est calculé selon le type client.
   Stream<List<Subscription>> watchSubscriptions();
-  Future<void> addSubscription(int schoolId);
+  Future<void> addSubscription(int schoolId, {int amountPaid = 0, DateTime? date});
+  Future<void> updateSubscription(
+    Subscription subscription, {
+    required int schoolId,
+    required DateTime date,
+    required int amountPaid,
+  });
 
   // Prises de vue
   Stream<List<PhotoSession>> watchPhotoSessions();
@@ -18,6 +24,15 @@ abstract class FinanceRepository {
     required DateTime date,
     required int studentsRegistered,
     required int unitPrice,
+    int amountPaid = 0,
+  });
+  Future<void> updatePhotoSession(
+    PhotoSession session, {
+    required int schoolId,
+    required DateTime date,
+    required int studentsRegistered,
+    required int unitPrice,
+    required int amountPaid,
   });
 
   // Entrées et sorties de caisse

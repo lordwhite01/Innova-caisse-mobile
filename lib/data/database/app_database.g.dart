@@ -390,13 +390,28 @@ class $SubscriptionsTable extends Subscriptions
   late final GeneratedColumn<int> amount = GeneratedColumn<int>(
       'amount', aliasedName, false,
       type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _amountPaidMeta =
+      const VerificationMeta('amountPaid');
+  @override
+  late final GeneratedColumn<int> amountPaid = GeneratedColumn<int>(
+      'amount_paid', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _movementIdMeta =
+      const VerificationMeta('movementId');
+  @override
+  late final GeneratedColumn<int> movementId = GeneratedColumn<int>(
+      'movement_id', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
   static const VerificationMeta _dateMeta = const VerificationMeta('date');
   @override
   late final GeneratedColumn<DateTime> date = GeneratedColumn<DateTime>(
       'date', aliasedName, false,
       type: DriftSqlType.dateTime, requiredDuringInsert: true);
   @override
-  List<GeneratedColumn> get $columns => [id, schoolId, kind, amount, date];
+  List<GeneratedColumn> get $columns =>
+      [id, schoolId, kind, amount, amountPaid, movementId, date];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -428,6 +443,18 @@ class $SubscriptionsTable extends Subscriptions
     } else if (isInserting) {
       context.missing(_amountMeta);
     }
+    if (data.containsKey('amount_paid')) {
+      context.handle(
+          _amountPaidMeta,
+          amountPaid.isAcceptableOrUnknown(
+              data['amount_paid']!, _amountPaidMeta));
+    }
+    if (data.containsKey('movement_id')) {
+      context.handle(
+          _movementIdMeta,
+          movementId.isAcceptableOrUnknown(
+              data['movement_id']!, _movementIdMeta));
+    }
     if (data.containsKey('date')) {
       context.handle(
           _dateMeta, date.isAcceptableOrUnknown(data['date']!, _dateMeta));
@@ -451,6 +478,10 @@ class $SubscriptionsTable extends Subscriptions
           .read(DriftSqlType.string, data['${effectivePrefix}kind'])!,
       amount: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}amount'])!,
+      amountPaid: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}amount_paid'])!,
+      movementId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}movement_id']),
       date: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}date'])!,
     );
@@ -467,12 +498,18 @@ class Subscription extends DataClass implements Insertable<Subscription> {
   final int schoolId;
   final String kind;
   final int amount;
+  final int amountPaid;
+
+  /// Encaissement lié, créé automatiquement quand un montant est payé.
+  final int? movementId;
   final DateTime date;
   const Subscription(
       {required this.id,
       required this.schoolId,
       required this.kind,
       required this.amount,
+      required this.amountPaid,
+      this.movementId,
       required this.date});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -481,6 +518,10 @@ class Subscription extends DataClass implements Insertable<Subscription> {
     map['school_id'] = Variable<int>(schoolId);
     map['kind'] = Variable<String>(kind);
     map['amount'] = Variable<int>(amount);
+    map['amount_paid'] = Variable<int>(amountPaid);
+    if (!nullToAbsent || movementId != null) {
+      map['movement_id'] = Variable<int>(movementId);
+    }
     map['date'] = Variable<DateTime>(date);
     return map;
   }
@@ -491,6 +532,10 @@ class Subscription extends DataClass implements Insertable<Subscription> {
       schoolId: Value(schoolId),
       kind: Value(kind),
       amount: Value(amount),
+      amountPaid: Value(amountPaid),
+      movementId: movementId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(movementId),
       date: Value(date),
     );
   }
@@ -503,6 +548,8 @@ class Subscription extends DataClass implements Insertable<Subscription> {
       schoolId: serializer.fromJson<int>(json['schoolId']),
       kind: serializer.fromJson<String>(json['kind']),
       amount: serializer.fromJson<int>(json['amount']),
+      amountPaid: serializer.fromJson<int>(json['amountPaid']),
+      movementId: serializer.fromJson<int?>(json['movementId']),
       date: serializer.fromJson<DateTime>(json['date']),
     );
   }
@@ -514,6 +561,8 @@ class Subscription extends DataClass implements Insertable<Subscription> {
       'schoolId': serializer.toJson<int>(schoolId),
       'kind': serializer.toJson<String>(kind),
       'amount': serializer.toJson<int>(amount),
+      'amountPaid': serializer.toJson<int>(amountPaid),
+      'movementId': serializer.toJson<int?>(movementId),
       'date': serializer.toJson<DateTime>(date),
     };
   }
@@ -523,12 +572,16 @@ class Subscription extends DataClass implements Insertable<Subscription> {
           int? schoolId,
           String? kind,
           int? amount,
+          int? amountPaid,
+          Value<int?> movementId = const Value.absent(),
           DateTime? date}) =>
       Subscription(
         id: id ?? this.id,
         schoolId: schoolId ?? this.schoolId,
         kind: kind ?? this.kind,
         amount: amount ?? this.amount,
+        amountPaid: amountPaid ?? this.amountPaid,
+        movementId: movementId.present ? movementId.value : this.movementId,
         date: date ?? this.date,
       );
   Subscription copyWithCompanion(SubscriptionsCompanion data) {
@@ -537,6 +590,10 @@ class Subscription extends DataClass implements Insertable<Subscription> {
       schoolId: data.schoolId.present ? data.schoolId.value : this.schoolId,
       kind: data.kind.present ? data.kind.value : this.kind,
       amount: data.amount.present ? data.amount.value : this.amount,
+      amountPaid:
+          data.amountPaid.present ? data.amountPaid.value : this.amountPaid,
+      movementId:
+          data.movementId.present ? data.movementId.value : this.movementId,
       date: data.date.present ? data.date.value : this.date,
     );
   }
@@ -548,13 +605,16 @@ class Subscription extends DataClass implements Insertable<Subscription> {
           ..write('schoolId: $schoolId, ')
           ..write('kind: $kind, ')
           ..write('amount: $amount, ')
+          ..write('amountPaid: $amountPaid, ')
+          ..write('movementId: $movementId, ')
           ..write('date: $date')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, schoolId, kind, amount, date);
+  int get hashCode =>
+      Object.hash(id, schoolId, kind, amount, amountPaid, movementId, date);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -563,6 +623,8 @@ class Subscription extends DataClass implements Insertable<Subscription> {
           other.schoolId == this.schoolId &&
           other.kind == this.kind &&
           other.amount == this.amount &&
+          other.amountPaid == this.amountPaid &&
+          other.movementId == this.movementId &&
           other.date == this.date);
 }
 
@@ -571,12 +633,16 @@ class SubscriptionsCompanion extends UpdateCompanion<Subscription> {
   final Value<int> schoolId;
   final Value<String> kind;
   final Value<int> amount;
+  final Value<int> amountPaid;
+  final Value<int?> movementId;
   final Value<DateTime> date;
   const SubscriptionsCompanion({
     this.id = const Value.absent(),
     this.schoolId = const Value.absent(),
     this.kind = const Value.absent(),
     this.amount = const Value.absent(),
+    this.amountPaid = const Value.absent(),
+    this.movementId = const Value.absent(),
     this.date = const Value.absent(),
   });
   SubscriptionsCompanion.insert({
@@ -584,6 +650,8 @@ class SubscriptionsCompanion extends UpdateCompanion<Subscription> {
     required int schoolId,
     required String kind,
     required int amount,
+    this.amountPaid = const Value.absent(),
+    this.movementId = const Value.absent(),
     required DateTime date,
   })  : schoolId = Value(schoolId),
         kind = Value(kind),
@@ -594,6 +662,8 @@ class SubscriptionsCompanion extends UpdateCompanion<Subscription> {
     Expression<int>? schoolId,
     Expression<String>? kind,
     Expression<int>? amount,
+    Expression<int>? amountPaid,
+    Expression<int>? movementId,
     Expression<DateTime>? date,
   }) {
     return RawValuesInsertable({
@@ -601,6 +671,8 @@ class SubscriptionsCompanion extends UpdateCompanion<Subscription> {
       if (schoolId != null) 'school_id': schoolId,
       if (kind != null) 'kind': kind,
       if (amount != null) 'amount': amount,
+      if (amountPaid != null) 'amount_paid': amountPaid,
+      if (movementId != null) 'movement_id': movementId,
       if (date != null) 'date': date,
     });
   }
@@ -610,12 +682,16 @@ class SubscriptionsCompanion extends UpdateCompanion<Subscription> {
       Value<int>? schoolId,
       Value<String>? kind,
       Value<int>? amount,
+      Value<int>? amountPaid,
+      Value<int?>? movementId,
       Value<DateTime>? date}) {
     return SubscriptionsCompanion(
       id: id ?? this.id,
       schoolId: schoolId ?? this.schoolId,
       kind: kind ?? this.kind,
       amount: amount ?? this.amount,
+      amountPaid: amountPaid ?? this.amountPaid,
+      movementId: movementId ?? this.movementId,
       date: date ?? this.date,
     );
   }
@@ -635,6 +711,12 @@ class SubscriptionsCompanion extends UpdateCompanion<Subscription> {
     if (amount.present) {
       map['amount'] = Variable<int>(amount.value);
     }
+    if (amountPaid.present) {
+      map['amount_paid'] = Variable<int>(amountPaid.value);
+    }
+    if (movementId.present) {
+      map['movement_id'] = Variable<int>(movementId.value);
+    }
     if (date.present) {
       map['date'] = Variable<DateTime>(date.value);
     }
@@ -648,6 +730,8 @@ class SubscriptionsCompanion extends UpdateCompanion<Subscription> {
           ..write('schoolId: $schoolId, ')
           ..write('kind: $kind, ')
           ..write('amount: $amount, ')
+          ..write('amountPaid: $amountPaid, ')
+          ..write('movementId: $movementId, ')
           ..write('date: $date')
           ..write(')'))
         .toString();
@@ -695,9 +779,30 @@ class $PhotoSessionsTable extends PhotoSessions
   late final GeneratedColumn<int> unitPrice = GeneratedColumn<int>(
       'unit_price', aliasedName, false,
       type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _amountPaidMeta =
+      const VerificationMeta('amountPaid');
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, schoolId, date, studentsRegistered, unitPrice];
+  late final GeneratedColumn<int> amountPaid = GeneratedColumn<int>(
+      'amount_paid', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _movementIdMeta =
+      const VerificationMeta('movementId');
+  @override
+  late final GeneratedColumn<int> movementId = GeneratedColumn<int>(
+      'movement_id', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        schoolId,
+        date,
+        studentsRegistered,
+        unitPrice,
+        amountPaid,
+        movementId
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -737,6 +842,18 @@ class $PhotoSessionsTable extends PhotoSessions
     } else if (isInserting) {
       context.missing(_unitPriceMeta);
     }
+    if (data.containsKey('amount_paid')) {
+      context.handle(
+          _amountPaidMeta,
+          amountPaid.isAcceptableOrUnknown(
+              data['amount_paid']!, _amountPaidMeta));
+    }
+    if (data.containsKey('movement_id')) {
+      context.handle(
+          _movementIdMeta,
+          movementId.isAcceptableOrUnknown(
+              data['movement_id']!, _movementIdMeta));
+    }
     return context;
   }
 
@@ -756,6 +873,10 @@ class $PhotoSessionsTable extends PhotoSessions
           DriftSqlType.int, data['${effectivePrefix}students_registered'])!,
       unitPrice: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}unit_price'])!,
+      amountPaid: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}amount_paid'])!,
+      movementId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}movement_id']),
     );
   }
 
@@ -771,12 +892,18 @@ class PhotoSession extends DataClass implements Insertable<PhotoSession> {
   final DateTime date;
   final int studentsRegistered;
   final int unitPrice;
+  final int amountPaid;
+
+  /// Encaissement lié, créé automatiquement quand un montant est payé.
+  final int? movementId;
   const PhotoSession(
       {required this.id,
       required this.schoolId,
       required this.date,
       required this.studentsRegistered,
-      required this.unitPrice});
+      required this.unitPrice,
+      required this.amountPaid,
+      this.movementId});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -785,6 +912,10 @@ class PhotoSession extends DataClass implements Insertable<PhotoSession> {
     map['date'] = Variable<DateTime>(date);
     map['students_registered'] = Variable<int>(studentsRegistered);
     map['unit_price'] = Variable<int>(unitPrice);
+    map['amount_paid'] = Variable<int>(amountPaid);
+    if (!nullToAbsent || movementId != null) {
+      map['movement_id'] = Variable<int>(movementId);
+    }
     return map;
   }
 
@@ -795,6 +926,10 @@ class PhotoSession extends DataClass implements Insertable<PhotoSession> {
       date: Value(date),
       studentsRegistered: Value(studentsRegistered),
       unitPrice: Value(unitPrice),
+      amountPaid: Value(amountPaid),
+      movementId: movementId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(movementId),
     );
   }
 
@@ -807,6 +942,8 @@ class PhotoSession extends DataClass implements Insertable<PhotoSession> {
       date: serializer.fromJson<DateTime>(json['date']),
       studentsRegistered: serializer.fromJson<int>(json['studentsRegistered']),
       unitPrice: serializer.fromJson<int>(json['unitPrice']),
+      amountPaid: serializer.fromJson<int>(json['amountPaid']),
+      movementId: serializer.fromJson<int?>(json['movementId']),
     );
   }
   @override
@@ -818,6 +955,8 @@ class PhotoSession extends DataClass implements Insertable<PhotoSession> {
       'date': serializer.toJson<DateTime>(date),
       'studentsRegistered': serializer.toJson<int>(studentsRegistered),
       'unitPrice': serializer.toJson<int>(unitPrice),
+      'amountPaid': serializer.toJson<int>(amountPaid),
+      'movementId': serializer.toJson<int?>(movementId),
     };
   }
 
@@ -826,13 +965,17 @@ class PhotoSession extends DataClass implements Insertable<PhotoSession> {
           int? schoolId,
           DateTime? date,
           int? studentsRegistered,
-          int? unitPrice}) =>
+          int? unitPrice,
+          int? amountPaid,
+          Value<int?> movementId = const Value.absent()}) =>
       PhotoSession(
         id: id ?? this.id,
         schoolId: schoolId ?? this.schoolId,
         date: date ?? this.date,
         studentsRegistered: studentsRegistered ?? this.studentsRegistered,
         unitPrice: unitPrice ?? this.unitPrice,
+        amountPaid: amountPaid ?? this.amountPaid,
+        movementId: movementId.present ? movementId.value : this.movementId,
       );
   PhotoSession copyWithCompanion(PhotoSessionsCompanion data) {
     return PhotoSession(
@@ -843,6 +986,10 @@ class PhotoSession extends DataClass implements Insertable<PhotoSession> {
           ? data.studentsRegistered.value
           : this.studentsRegistered,
       unitPrice: data.unitPrice.present ? data.unitPrice.value : this.unitPrice,
+      amountPaid:
+          data.amountPaid.present ? data.amountPaid.value : this.amountPaid,
+      movementId:
+          data.movementId.present ? data.movementId.value : this.movementId,
     );
   }
 
@@ -853,14 +1000,16 @@ class PhotoSession extends DataClass implements Insertable<PhotoSession> {
           ..write('schoolId: $schoolId, ')
           ..write('date: $date, ')
           ..write('studentsRegistered: $studentsRegistered, ')
-          ..write('unitPrice: $unitPrice')
+          ..write('unitPrice: $unitPrice, ')
+          ..write('amountPaid: $amountPaid, ')
+          ..write('movementId: $movementId')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, schoolId, date, studentsRegistered, unitPrice);
+  int get hashCode => Object.hash(id, schoolId, date, studentsRegistered,
+      unitPrice, amountPaid, movementId);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -869,7 +1018,9 @@ class PhotoSession extends DataClass implements Insertable<PhotoSession> {
           other.schoolId == this.schoolId &&
           other.date == this.date &&
           other.studentsRegistered == this.studentsRegistered &&
-          other.unitPrice == this.unitPrice);
+          other.unitPrice == this.unitPrice &&
+          other.amountPaid == this.amountPaid &&
+          other.movementId == this.movementId);
 }
 
 class PhotoSessionsCompanion extends UpdateCompanion<PhotoSession> {
@@ -878,12 +1029,16 @@ class PhotoSessionsCompanion extends UpdateCompanion<PhotoSession> {
   final Value<DateTime> date;
   final Value<int> studentsRegistered;
   final Value<int> unitPrice;
+  final Value<int> amountPaid;
+  final Value<int?> movementId;
   const PhotoSessionsCompanion({
     this.id = const Value.absent(),
     this.schoolId = const Value.absent(),
     this.date = const Value.absent(),
     this.studentsRegistered = const Value.absent(),
     this.unitPrice = const Value.absent(),
+    this.amountPaid = const Value.absent(),
+    this.movementId = const Value.absent(),
   });
   PhotoSessionsCompanion.insert({
     this.id = const Value.absent(),
@@ -891,6 +1046,8 @@ class PhotoSessionsCompanion extends UpdateCompanion<PhotoSession> {
     required DateTime date,
     required int studentsRegistered,
     required int unitPrice,
+    this.amountPaid = const Value.absent(),
+    this.movementId = const Value.absent(),
   })  : schoolId = Value(schoolId),
         date = Value(date),
         studentsRegistered = Value(studentsRegistered),
@@ -901,6 +1058,8 @@ class PhotoSessionsCompanion extends UpdateCompanion<PhotoSession> {
     Expression<DateTime>? date,
     Expression<int>? studentsRegistered,
     Expression<int>? unitPrice,
+    Expression<int>? amountPaid,
+    Expression<int>? movementId,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -908,6 +1067,8 @@ class PhotoSessionsCompanion extends UpdateCompanion<PhotoSession> {
       if (date != null) 'date': date,
       if (studentsRegistered != null) 'students_registered': studentsRegistered,
       if (unitPrice != null) 'unit_price': unitPrice,
+      if (amountPaid != null) 'amount_paid': amountPaid,
+      if (movementId != null) 'movement_id': movementId,
     });
   }
 
@@ -916,13 +1077,17 @@ class PhotoSessionsCompanion extends UpdateCompanion<PhotoSession> {
       Value<int>? schoolId,
       Value<DateTime>? date,
       Value<int>? studentsRegistered,
-      Value<int>? unitPrice}) {
+      Value<int>? unitPrice,
+      Value<int>? amountPaid,
+      Value<int?>? movementId}) {
     return PhotoSessionsCompanion(
       id: id ?? this.id,
       schoolId: schoolId ?? this.schoolId,
       date: date ?? this.date,
       studentsRegistered: studentsRegistered ?? this.studentsRegistered,
       unitPrice: unitPrice ?? this.unitPrice,
+      amountPaid: amountPaid ?? this.amountPaid,
+      movementId: movementId ?? this.movementId,
     );
   }
 
@@ -944,6 +1109,12 @@ class PhotoSessionsCompanion extends UpdateCompanion<PhotoSession> {
     if (unitPrice.present) {
       map['unit_price'] = Variable<int>(unitPrice.value);
     }
+    if (amountPaid.present) {
+      map['amount_paid'] = Variable<int>(amountPaid.value);
+    }
+    if (movementId.present) {
+      map['movement_id'] = Variable<int>(movementId.value);
+    }
     return map;
   }
 
@@ -954,7 +1125,9 @@ class PhotoSessionsCompanion extends UpdateCompanion<PhotoSession> {
           ..write('schoolId: $schoolId, ')
           ..write('date: $date, ')
           ..write('studentsRegistered: $studentsRegistered, ')
-          ..write('unitPrice: $unitPrice')
+          ..write('unitPrice: $unitPrice, ')
+          ..write('amountPaid: $amountPaid, ')
+          ..write('movementId: $movementId')
           ..write(')'))
         .toString();
   }
@@ -1757,6 +1930,8 @@ typedef $$SubscriptionsTableCreateCompanionBuilder = SubscriptionsCompanion
   required int schoolId,
   required String kind,
   required int amount,
+  Value<int> amountPaid,
+  Value<int?> movementId,
   required DateTime date,
 });
 typedef $$SubscriptionsTableUpdateCompanionBuilder = SubscriptionsCompanion
@@ -1765,6 +1940,8 @@ typedef $$SubscriptionsTableUpdateCompanionBuilder = SubscriptionsCompanion
   Value<int> schoolId,
   Value<String> kind,
   Value<int> amount,
+  Value<int> amountPaid,
+  Value<int?> movementId,
   Value<DateTime> date,
 });
 
@@ -1805,6 +1982,12 @@ class $$SubscriptionsTableFilterComposer
 
   ColumnFilters<int> get amount => $composableBuilder(
       column: $table.amount, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get amountPaid => $composableBuilder(
+      column: $table.amountPaid, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get movementId => $composableBuilder(
+      column: $table.movementId, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get date => $composableBuilder(
       column: $table.date, builder: (column) => ColumnFilters(column));
@@ -1848,6 +2031,12 @@ class $$SubscriptionsTableOrderingComposer
   ColumnOrderings<int> get amount => $composableBuilder(
       column: $table.amount, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<int> get amountPaid => $composableBuilder(
+      column: $table.amountPaid, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get movementId => $composableBuilder(
+      column: $table.movementId, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get date => $composableBuilder(
       column: $table.date, builder: (column) => ColumnOrderings(column));
 
@@ -1889,6 +2078,12 @@ class $$SubscriptionsTableAnnotationComposer
 
   GeneratedColumn<int> get amount =>
       $composableBuilder(column: $table.amount, builder: (column) => column);
+
+  GeneratedColumn<int> get amountPaid => $composableBuilder(
+      column: $table.amountPaid, builder: (column) => column);
+
+  GeneratedColumn<int> get movementId => $composableBuilder(
+      column: $table.movementId, builder: (column) => column);
 
   GeneratedColumn<DateTime> get date =>
       $composableBuilder(column: $table.date, builder: (column) => column);
@@ -1941,6 +2136,8 @@ class $$SubscriptionsTableTableManager extends RootTableManager<
             Value<int> schoolId = const Value.absent(),
             Value<String> kind = const Value.absent(),
             Value<int> amount = const Value.absent(),
+            Value<int> amountPaid = const Value.absent(),
+            Value<int?> movementId = const Value.absent(),
             Value<DateTime> date = const Value.absent(),
           }) =>
               SubscriptionsCompanion(
@@ -1948,6 +2145,8 @@ class $$SubscriptionsTableTableManager extends RootTableManager<
             schoolId: schoolId,
             kind: kind,
             amount: amount,
+            amountPaid: amountPaid,
+            movementId: movementId,
             date: date,
           ),
           createCompanionCallback: ({
@@ -1955,6 +2154,8 @@ class $$SubscriptionsTableTableManager extends RootTableManager<
             required int schoolId,
             required String kind,
             required int amount,
+            Value<int> amountPaid = const Value.absent(),
+            Value<int?> movementId = const Value.absent(),
             required DateTime date,
           }) =>
               SubscriptionsCompanion.insert(
@@ -1962,6 +2163,8 @@ class $$SubscriptionsTableTableManager extends RootTableManager<
             schoolId: schoolId,
             kind: kind,
             amount: amount,
+            amountPaid: amountPaid,
+            movementId: movementId,
             date: date,
           ),
           withReferenceMapper: (p0) => p0
@@ -2027,6 +2230,8 @@ typedef $$PhotoSessionsTableCreateCompanionBuilder = PhotoSessionsCompanion
   required DateTime date,
   required int studentsRegistered,
   required int unitPrice,
+  Value<int> amountPaid,
+  Value<int?> movementId,
 });
 typedef $$PhotoSessionsTableUpdateCompanionBuilder = PhotoSessionsCompanion
     Function({
@@ -2035,6 +2240,8 @@ typedef $$PhotoSessionsTableUpdateCompanionBuilder = PhotoSessionsCompanion
   Value<DateTime> date,
   Value<int> studentsRegistered,
   Value<int> unitPrice,
+  Value<int> amountPaid,
+  Value<int?> movementId,
 });
 
 final class $$PhotoSessionsTableReferences
@@ -2079,6 +2286,12 @@ class $$PhotoSessionsTableFilterComposer
   ColumnFilters<int> get unitPrice => $composableBuilder(
       column: $table.unitPrice, builder: (column) => ColumnFilters(column));
 
+  ColumnFilters<int> get amountPaid => $composableBuilder(
+      column: $table.amountPaid, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get movementId => $composableBuilder(
+      column: $table.movementId, builder: (column) => ColumnFilters(column));
+
   $$SchoolsTableFilterComposer get schoolId {
     final $$SchoolsTableFilterComposer composer = $composerBuilder(
         composer: this,
@@ -2122,6 +2335,12 @@ class $$PhotoSessionsTableOrderingComposer
   ColumnOrderings<int> get unitPrice => $composableBuilder(
       column: $table.unitPrice, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<int> get amountPaid => $composableBuilder(
+      column: $table.amountPaid, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get movementId => $composableBuilder(
+      column: $table.movementId, builder: (column) => ColumnOrderings(column));
+
   $$SchoolsTableOrderingComposer get schoolId {
     final $$SchoolsTableOrderingComposer composer = $composerBuilder(
         composer: this,
@@ -2163,6 +2382,12 @@ class $$PhotoSessionsTableAnnotationComposer
 
   GeneratedColumn<int> get unitPrice =>
       $composableBuilder(column: $table.unitPrice, builder: (column) => column);
+
+  GeneratedColumn<int> get amountPaid => $composableBuilder(
+      column: $table.amountPaid, builder: (column) => column);
+
+  GeneratedColumn<int> get movementId => $composableBuilder(
+      column: $table.movementId, builder: (column) => column);
 
   $$SchoolsTableAnnotationComposer get schoolId {
     final $$SchoolsTableAnnotationComposer composer = $composerBuilder(
@@ -2213,6 +2438,8 @@ class $$PhotoSessionsTableTableManager extends RootTableManager<
             Value<DateTime> date = const Value.absent(),
             Value<int> studentsRegistered = const Value.absent(),
             Value<int> unitPrice = const Value.absent(),
+            Value<int> amountPaid = const Value.absent(),
+            Value<int?> movementId = const Value.absent(),
           }) =>
               PhotoSessionsCompanion(
             id: id,
@@ -2220,6 +2447,8 @@ class $$PhotoSessionsTableTableManager extends RootTableManager<
             date: date,
             studentsRegistered: studentsRegistered,
             unitPrice: unitPrice,
+            amountPaid: amountPaid,
+            movementId: movementId,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
@@ -2227,6 +2456,8 @@ class $$PhotoSessionsTableTableManager extends RootTableManager<
             required DateTime date,
             required int studentsRegistered,
             required int unitPrice,
+            Value<int> amountPaid = const Value.absent(),
+            Value<int?> movementId = const Value.absent(),
           }) =>
               PhotoSessionsCompanion.insert(
             id: id,
@@ -2234,6 +2465,8 @@ class $$PhotoSessionsTableTableManager extends RootTableManager<
             date: date,
             studentsRegistered: studentsRegistered,
             unitPrice: unitPrice,
+            amountPaid: amountPaid,
+            movementId: movementId,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (
